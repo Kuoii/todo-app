@@ -1,0 +1,6 @@
+assets/
+node_modules/
+
+server/todo.db
+
+TODO

@@ -1,0 +1,46 @@
+
+:root, button, input {
+    font-family: 'Rubik', sans-serif;
+}
+
+/*:root {
+    font-size: 1.5rem;
+}
+
+button, input {
+    font-size: 1.0rem;
+    border: 0px;
+    border-radius: 10px;
+    padding: 0.5rem;
+}
+button {
+    background-color: pink;
+}
+main{
+    width : 46%;
+    margin-inline: auto;
+}
+#task-list-header{
+    background-color: deeppink;
+    padding : 10px;
+}
+#task-list-items{
+    background-color: hotpink;
+    padding : 10px;
+    display : flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+#task-date{
+    margin: 10px;
+}
+.task-button{
+    margin-inline: 10px;
+}*/
+.task-button img {
+    width: 15px;
+    height: auto;
+}
+.task > *{
+    display: inline;
+}
