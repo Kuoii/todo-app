@@ -1,82 +1,146 @@
+async function catchedFetch(url, options) {
+    let result = { response: null, type: "" };
+    try {
+        const response = await fetch(url, options);
+        result = !response.ok
+            ? { response: response, type: "error" }
+            : { response: response, type: "success" };
+    } catch (error) {
+        console.error("Chybka :c ", error);
+        result = { response: error, type: "error" };
+    }
+    return result;
+}
 
 async function fetchTasks() {
-    const response = await fetch("http://localhost:3000/", { 
-        method : "GET",
-        })
-    const text = JSON.parse(await response.text());
-    console.log("Im running!");
+    const date = document.getElementById("date-picker").value;
 
-    document.getElementById("task-list-items").replaceChildren();
+    const result = await catchedFetch(`http://localhost:3000/?date=${date}`, {
+        method: "GET",
+    });
 
-    for(const task of text){
-        if(task.date == document.getElementById("date-picker").value){
-        console.log("tady");
-        console.log(task);
-        createElement(task.id, task.task);
+    const response = result.response;
+    if (result.type === "success") {
+        const tasks = JSON.parse(await response.text());
+        console.log("I'm running", result);
+
+        document.getElementById("task-list-items").replaceChildren();
+
+        for (const task of tasks) {
+            createTaskElement(task.id, task.task);
         }
+    } else {
+        raiseToast(
+            `Tasks failed to fetch because: ${await response.text()}`,
+            "error"
+        );
     }
 }
+
 async function createTask() {
-    const requestBody = {"task" : document.getElementById("task-input").value,
-                        "date" : document.getElementById("date-picker").value
-                        };
+    const requestBody = {
+        task: document.getElementById("task-input").value,
+        date: document.getElementById("date-picker").value,
+    };
     console.log(document.getElementById("date-picker").value);
 
-    const response = await fetch("http://localhost:3000/", {
-        method : "POST",
-        headers : { "Content-Type": "application/json" },
-        body : JSON.stringify(requestBody)
-        })
-    
-    const responseText = JSON.parse(await response.text());
-    document.getElementById("task-input").value = "";
-    console.log(responseText);
-    createElement(responseText.id, responseText.task);
+    const result = await catchedFetch("http://localhost:3000/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+    });
+
+    const response = result.response;
+
+    if (result.type === "success") {
+        const responseText = JSON.parse(await response.text());
+        document.getElementById("task-input").value = "";
+        console.log(responseText);
+        createTaskElement(responseText.id, responseText.task);
+
+        raiseToast("Task added successfully!", "success");
+    } else {
+        raiseToast(
+            `Creating task failed because: ${await response.text()}`,
+            "error"
+        );
+    }
 }
+
 async function updateTask(taskId, element) {
     console.log("updating!");
     console.log(element.firstChild.nextSibling.value);
 
     const requestBody = {
-        "task": element.firstChild.nextSibling.value,
-        "id": taskId
+        task: element.firstChild.nextSibling.value,
+        id: taskId,
+    };
+
+    const result = await catchedFetch("http://localhost:3000/", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+    });
+
+    const response = result.response;
+
+    if (result.type === "success") {
+        const responseText = JSON.parse(await response.text());
+
+        document.getElementById("edit").remove();
+        document.getElementById(`update-button-${taskId}`).style.visibility =
+            "hidden";
+        const content = document.getElementById(`task-id-${taskId}`).firstChild
+            .nextSibling;
+        content.innerText = responseText.task;
+
+        console.log(responseText.task);
+
+        raiseToast("Task successfully updated!", "success");
+    } else {
+        raiseToast(
+            `Updating task failed because: ${await response.text()}`,
+            "error"
+        );
     }
-
-    const response = await fetch("http://localhost:3000/", {
-        method : "PUT",
-        headers : { "Content-Type": "application/json" },
-        body : JSON.stringify(requestBody)
-        })
-    const responseText = JSON.parse(await response.text());
-
-    document.getElementById("edit").remove();
-    document.getElementById(`update-button-${taskId}`).style.visibility = "hidden";
-    const content = document.getElementById(`task-id-${taskId}`).firstChild.nextSibling;
-    content.innerText = responseText.task;
-    
-    console.log(responseText.task);
 }
+
 async function deleteTask(taskId) {
     console.log("deleting?");
 
-    const requestBody = {"id" : taskId};
+    const requestBody = { id: taskId };
 
-    const response = await fetch("http://localhost:3000/", {
-        method : "DELETE",
-        headers : { "Content-Type": "application/json" },
-        body : JSON.stringify(requestBody)
-        })
+    const result = await catchedFetch("http://localhost:3000/", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+    });
+
+    const response = result.response;
+
+    if (result.type === "success") {
+        raiseToast("Task successfully deleted!", "success");
+    } else {
+        raiseToast(
+            `Deleting task failed because: ${await response.text()}`,
+            "error"
+        );
+    }
 
     fetchTasks();
 }
-function createButton(text, onclick){
+
+function createTaskButton(text, onclick) {
     const button = document.createElement("button");
+
     button.classList.add("task-button");
     button.onclick = onclick;
     button.innerHTML = text;
+
     return button;
 }
-function editTask(content, element, button){
+
+function editTaskElement(content, element, button) {
     console.log("editiing");
     const task = content.innerText;
     const editTask = document.createElement("input");
@@ -87,61 +151,91 @@ function editTask(content, element, button){
     button.style.visibility = "visible";
     console.log(element);
 }
-function doneTask(id, checkbox){
-    document.getElementById(`task-id-${id}`).style.color = checkbox.checked ? "darkGray" : "";
+
+function checkTaskElement(id, checkbox) {
+    document.getElementById(`task-id-${id}`).style.color = checkbox.checked
+        ? "darkGray"
+        : "";
 }
-function dateFormat(date){
+
+function formatDate(date) {
     return date.toISOString().slice(0, 10);
 }
-function changeDay(by){
+
+function changeDay(by) {
     const newDate = document.getElementById("date-picker").valueAsDate;
-    newDate.setDate(newDate.getDate() + by); 
-    document.getElementById("date-picker").value = dateFormat(newDate);
+    newDate.setDate(newDate.getDate() + by);
+    document.getElementById("date-picker").value = formatDate(newDate);
     fetchTasks();
 }
-function setDate(){
-    document.getElementById("date-picker").value = dateFormat(new Date());
+
+function setDate() {
+    document.getElementById("date-picker").value = formatDate(new Date());
     //console.log(document.getElementById("date-picker").value);
     console.log(document.getElementById("date-picker").innerText);
-    console.log(dateFormat(new Date()));
+    console.log(formatDate(new Date()));
 }
-function dateChangeHandler(){
+
+function changeDateHandler() {
     fetchTasks();
 }
-function inputHandler(){
+
+function inputHandler() {
     const input = document.getElementById("task-input");
     input.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
             document.getElementById("create-task-button").click();
         }
-    })
+    });
 }
-function createElement(id, task){
+
+function createTaskElement(id, task) {
     const element = document.createElement("div");
-        const content = document.createElement("div");
+    const content = document.createElement("div");
 
-        const checkBox = document.createElement("input");
-        checkBox.type = "checkbox";
-        checkBox.onclick = () => doneTask(id, checkBox);
-        const updateButton = createButton('<img src="assets/icons/pen.png">', () => updateTask(id, element));
-        updateButton.id = `update-button-${id}`;
-        updateButton.style.visibility = "hidden";
-        const deleteButton = createButton('<img src="assets/icons/bin.png">', () => deleteTask(id));
+    const checkBox = document.createElement("input");
+    checkBox.type = "checkbox";
+    checkBox.onclick = () => checkTaskElement(id, checkBox);
+    const updateButton = createTaskButton(
+        '<img src="assets/icons/pen.png">',
+        () => updateTask(id, element)
+    );
+    updateButton.id = `update-button-${id}`;
+    updateButton.style.visibility = "hidden";
+    const deleteButton = createTaskButton(
+        '<img src="assets/icons/bin.png">',
+        () => deleteTask(id)
+    );
 
-        element.setAttribute("id", `task-id-${id}`);
-        element.setAttribute("class", `flex mx-auto`);
-        element.appendChild(checkBox);
-        element.classList.add("task");
-        element.appendChild(content);
-        content.innerText = task;
-        content.addEventListener("click", () => editTask(content, element, updateButton));
-        element.appendChild(updateButton);
-        element.appendChild(deleteButton);
+    element.setAttribute("id", `task-id-${id}`);
+    element.setAttribute("class", `flex mx-auto`);
+    element.appendChild(checkBox);
+    element.classList.add("task");
+    element.appendChild(content);
+    content.innerText = task;
+    content.addEventListener("click", () =>
+        editTaskElement(content, element, updateButton)
+    );
+    element.appendChild(updateButton);
+    element.appendChild(deleteButton);
 
-        document.getElementById("task-list-items").appendChild(element);
+    document.getElementById("task-list-items").appendChild(element);
 }
+
+function raiseToast(message, type) {
+    const toasts = document.getElementById("toasts");
+    const element = document.createElement("div");
+
+    toasts.appendChild(element);
+    element.style.backgroundColor = type === "error" ? "pink" : "green";
+    element.innerText = message;
+
+    setTimeout(() => {
+        element.remove();
+    }, 3_000);
+}
+
+setDate();
+inputHandler();
+
 fetchTasks();
-document.addEventListener("DOMContentLoaded", () => {
-    setDate();
-    inputHandler();
-});
