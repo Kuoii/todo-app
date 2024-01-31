@@ -1,13 +1,18 @@
-const express = require("express");
+import express from "express";
 const app = express();
-const cors = require("cors");
+import cors from "cors";
 const port = 3000;
+
+import { Request, Response } from "express";
+
+import { z } from "zod";
+import { db } from "./db";
 
 app.use(cors());
 app.use(express.json());
 app.use(log);
 
-function log(req, res, next) {
+function log(req: Request, res: Response, next) {
     const time = new Date().toString().slice(16, 24);
     const method = req.method;
     const body = req.body;
@@ -16,10 +21,8 @@ function log(req, res, next) {
     next();
 }
 
-const db = require("better-sqlite3")("todo.db");
-
 app.get("/", (req, res) => {
-    const rawDate = new Date(req.query.date ?? Date.now());
+    const rawDate = new Date(req.query.date.toString() ?? Date.now());
     const date = rawDate.toISOString().split("T")[0];
 
     try {
@@ -28,7 +31,7 @@ app.get("/", (req, res) => {
         );
         const todos = getQuery.all({
             date,
-            limit: Math.min(req.query.limit ?? 20, 100),
+            limit: Math.min(Number(req.query.limit) ?? 20, 100),
         });
 
         res.send(todos);
@@ -39,12 +42,22 @@ app.get("/", (req, res) => {
     }
 });
 
+const TaskSchema = z
+    .object({
+        task: z.string().min(1),
+        date: z.string(),
+    })
+    .required();
+
 app.post("/", (req, res) => {
     try {
+        const task = TaskSchema.parse(req.body);
+
         const postQuery = db.prepare(
             "INSERT INTO tasks (task, date) VALUES (@task, @date) RETURNING id, task, date"
         );
-        const task = { task: req.body.task, date: req.body.date };
+
+        //const task = { task: req.body.task, date: req.body.date };
         const postedTask = postQuery.get(task);
         console.log(postedTask);
         res.send(postedTask);

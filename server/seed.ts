@@ -1,6 +1,11 @@
-const db = require("better-sqlite3")("todo.db");
+import { db } from "./db";
 
-const tasks = [
+type Task = {
+    task: string;
+    date: string;
+};
+
+const tasks: Task[] = [
     { task: "Water the plants", date: "2024-01-01" },
     { task: "Take dog for a walk", date: "2024-01-01" },
     { task: "Quickly chop down some trees", date: "2024-01-01" },
@@ -15,7 +20,7 @@ const insert = db.prepare(
     "INSERT INTO tasks (task, date) VALUES (@task, @date)"
 );
 
-const insertDefault = db.transaction((tasks) => {
+const insertDefault = db.transaction((tasks: Task[]) => {
     for (const task of tasks) insert.run(task);
 });
 
