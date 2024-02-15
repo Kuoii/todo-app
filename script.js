@@ -3,8 +3,8 @@ async function catchedFetch(url, options) {
     try {
         const response = await fetch(url, options);
         result = !response.ok
-            ? { response: response, type: "error" }
-            : { response: response, type: "success" };
+            ? { response: await response.text(), type: "error" }
+            : { response: await response.text(), type: "success" };
     } catch (error) {
         console.error("Chybka :c ", error);
         result = { response: error, type: "error" };
@@ -21,7 +21,7 @@ async function fetchTasks() {
 
     const response = result.response;
     if (result.type === "success") {
-        const tasks = JSON.parse(await response.text());
+        const tasks = JSON.parse(response);
         console.log("I'm running", result);
 
         document.getElementById("task-list-items").replaceChildren();
@@ -30,10 +30,7 @@ async function fetchTasks() {
             createTaskElement(task.id, task.task);
         }
     } else {
-        raiseToast(
-            `Tasks failed to fetch because: ${await response.text()}`,
-            "error"
-        );
+        raiseToast(`Tasks failed to fetch because: ${response}`, "error");
     }
 }
 
@@ -53,17 +50,14 @@ async function createTask() {
     const response = result.response;
 
     if (result.type === "success") {
-        const responseText = JSON.parse(await response.text());
+        const responseText = JSON.parse(response);
         document.getElementById("task-input").value = "";
         console.log(responseText);
         createTaskElement(responseText.id, responseText.task);
 
         raiseToast("Task added successfully!", "success");
     } else {
-        raiseToast(
-            `Creating task failed because: ${await response.text()}`,
-            "error"
-        );
+        raiseToast(`Creating task failed because: ${response}`, "error");
     }
 }
 
@@ -85,7 +79,7 @@ async function updateTask(taskId, element) {
     const response = result.response;
 
     if (result.type === "success") {
-        const responseText = JSON.parse(await response.text());
+        const responseText = JSON.parse(response);
 
         document.getElementById("edit").remove();
         document.getElementById(`update-button-${taskId}`).style.visibility =
@@ -98,10 +92,7 @@ async function updateTask(taskId, element) {
 
         raiseToast("Task successfully updated!", "success");
     } else {
-        raiseToast(
-            `Updating task failed because: ${await response.text()}`,
-            "error"
-        );
+        raiseToast(`Updating task failed because: ${response}`, "error");
     }
 }
 
@@ -121,10 +112,7 @@ async function deleteTask(taskId) {
     if (result.type === "success") {
         raiseToast("Task successfully deleted!", "success");
     } else {
-        raiseToast(
-            `Deleting task failed because: ${await response.text()}`,
-            "error"
-        );
+        raiseToast(`Deleting task failed because: ${response}`, "error");
     }
 
     fetchTasks();
@@ -145,6 +133,11 @@ function editTaskElement(content, element, button) {
     const task = content.innerText;
     const editTask = document.createElement("input");
     editTask.id = "edit";
+    editTask.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+            document.getElementsByClassName("update-button").click();
+        }
+    });
     content.innerHTML = "";
     editTask.value = task;
     element.insertBefore(editTask, element.firstChild.nextSibling);
@@ -202,6 +195,7 @@ function createTaskElement(id, task) {
     );
     updateButton.id = `update-button-${id}`;
     updateButton.style.visibility = "hidden";
+    updateButton.classList.add("update-button");
     const deleteButton = createTaskButton(
         '<img src="assets/icons/bin.png">',
         () => deleteTask(id)
@@ -226,9 +220,54 @@ function raiseToast(message, type) {
     const toasts = document.getElementById("toasts");
     const element = document.createElement("div");
 
+    element.classList.add(
+        "bg-white/30",
+        "rounded-xl",
+        "p-3",
+        "pb-4",
+        "text-center",
+        "overflow-hidden",
+        "relative"
+    );
+    element.classList.add(
+        "before:absolute",
+        "before:content-['']",
+        "before:h-[10px]",
+        "before:w-full",
+        "before:bottom-0",
+        "before:left-0",
+        "before:animate-[progress_3s_linear_forwards]"
+    );
+    const colors = {
+        error: "before:bg-pink-500",
+        success: "before:bg-teal-400",
+    };
+    element.classList.add(colors[type]);
+
+    element.innerText = message || "something went wromg :c";
+
+    const exitButton = document.createElement("button");
+
+    exitButton.classList.add(
+        "absolute",
+        "top-0",
+        "right-0",
+        "mr-4",
+        "mt-2",
+        "drop-shadow-md"
+    );
+    exitButton.classList.add(
+        "transition",
+        "ease-in-out",
+        "duration-75",
+        "hover:scale-110",
+        "hover:drop-shadow-2xl"
+    );
+    exitButton.innerText = "\u2716";
+    exitButton.onclick = () => element.remove();
+
+    element.appendChild(exitButton);
     toasts.appendChild(element);
-    element.style.backgroundColor = type === "error" ? "pink" : "green";
-    element.innerText = message;
 
     setTimeout(() => {
         element.remove();

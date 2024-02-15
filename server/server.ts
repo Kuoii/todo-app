@@ -22,22 +22,22 @@ function log(req: Request, res: Response, next) {
 }
 
 app.get("/", (req, res) => {
-    const rawDate = new Date(req.query.date.toString() ?? Date.now());
+    const rawDate = new Date(req.query.date as any);
     const date = rawDate.toISOString().split("T")[0];
-
+    console.log(date);
     try {
         const getQuery = db.prepare(
             "SELECT * FROM tasks WHERE date = @date LIMIT @limit"
         );
         const todos = getQuery.all({
             date,
-            limit: Math.min(Number(req.query.limit) ?? 20, 100),
+            limit: Math.min(Number(req.query.limit) || 20, 100),
         });
 
         res.send(todos);
         console.log(todos);
     } catch (err) {
-        console.error("Chybka :c", err.message);
+        console.error("Chybka :c", err);
         res.status(500).json({ error: "Server Error", message: err.message });
     }
 });
