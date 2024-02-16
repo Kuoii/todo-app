@@ -63,7 +63,7 @@ async function createTask() {
 
 async function updateTask(taskId, element) {
     console.log("updating!");
-    console.log(element.firstChild.nextSibling.value);
+    console.log("entered input: ", element.firstChild.nextSibling.value);
 
     const requestBody = {
         task: element.firstChild.nextSibling.value,
@@ -81,14 +81,15 @@ async function updateTask(taskId, element) {
     if (result.type === "success") {
         const responseText = JSON.parse(response);
 
-        document.getElementById("edit").remove();
+        document.getElementById(`edit-id-${taskId}`).remove();
         document.getElementById(`update-button-${taskId}`).style.visibility =
             "hidden";
         const content = document.getElementById(`task-id-${taskId}`).firstChild
             .nextSibling;
         content.innerText = responseText.task;
 
-        console.log(responseText.task);
+        console.log("response text: ", responseText.task);
+        console.log("Updated task: ", taskId);
 
         raiseToast("Task successfully updated!", "success");
     } else {
@@ -128,11 +129,11 @@ function createTaskButton(text, onclick) {
     return button;
 }
 
-function editTaskElement(content, element, button) {
+function editTaskElement(content, element, button, taskId) {
     console.log("editiing");
     const task = content.innerText;
     const editTask = document.createElement("input");
-    editTask.id = "edit";
+    editTask.id = `edit-id-${taskId}`;
     editTask.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
             document.getElementsByClassName("update-button").click();
@@ -189,27 +190,57 @@ function createTaskElement(id, task) {
     const checkBox = document.createElement("input");
     checkBox.type = "checkbox";
     checkBox.onclick = () => checkTaskElement(id, checkBox);
+    checkBox.classList.add(
+        "accent-violet-400",
+        "ml-[10%]",
+        "mr-[10%]",
+        "background-slate-400"
+    );
+    checkBox.classList.add(
+        "transition",
+        "ease-in-out",
+        "duration-75",
+        "hover:scale-125",
+        "hover:drop-shadow-2xl"
+    );
+
     const updateButton = createTaskButton(
-        '<img src="assets/icons/pen.png">',
+        '<img src="assets/icons/pen.svg">',
         () => updateTask(id, element)
     );
     updateButton.id = `update-button-${id}`;
+    updateButton.addEventListener("click", () =>
+        console.log("updated with button: ", updateButton.id)
+    );
     updateButton.style.visibility = "hidden";
     updateButton.classList.add("update-button");
+    updateButton.classList.add("scale-50", "ml-auto");
+
     const deleteButton = createTaskButton(
-        '<img src="assets/icons/bin.png">',
+        '<img src="assets/icons/bin.svg">',
         () => deleteTask(id)
+    );
+    deleteButton.classList.add("scale-50", "mr-[10%]");
+    deleteButton.classList.add(
+        "transition",
+        "ease-in-out",
+        "duration-75",
+        "hover:scale-75",
+        "hover:drop-shadow-2xl"
     );
 
     element.setAttribute("id", `task-id-${id}`);
-    element.setAttribute("class", `flex mx-auto`);
     element.appendChild(checkBox);
     element.classList.add("task");
+    element.classList.add("min-w-full", "flex", "flex-row");
     element.appendChild(content);
+
     content.innerText = task;
+    content.classList.add("mt-4");
     content.addEventListener("click", () =>
-        editTaskElement(content, element, updateButton)
+        editTaskElement(content, element, updateButton, id)
     );
+
     element.appendChild(updateButton);
     element.appendChild(deleteButton);
 
@@ -219,6 +250,7 @@ function createTaskElement(id, task) {
 function raiseToast(message, type) {
     const toasts = document.getElementById("toasts");
     const element = document.createElement("div");
+    const content = document.createElement("div");
 
     element.classList.add(
         "bg-white/30",
@@ -244,7 +276,7 @@ function raiseToast(message, type) {
     };
     element.classList.add(colors[type]);
 
-    element.innerText = message || "something went wromg :c";
+    content.innerText = message || "something went wromg :c";
 
     const exitButton = document.createElement("button");
 
@@ -266,6 +298,7 @@ function raiseToast(message, type) {
     exitButton.innerText = "\u2716";
     exitButton.onclick = () => element.remove();
 
+    element.appendChild(content);
     element.appendChild(exitButton);
     toasts.appendChild(element);
 
