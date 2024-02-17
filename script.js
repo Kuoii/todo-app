@@ -147,9 +147,19 @@ function editTaskElement(content, element, button, taskId) {
 }
 
 function checkTaskElement(id, checkbox) {
-    document.getElementById(`task-id-${id}`).style.color = checkbox.checked
-        ? "darkGray"
-        : "";
+    const element = document.getElementById(`task-id-${id}`);
+    const content = element.firstChild.nextSibling;
+    const updateButton = document.getElementById(`update-button-${id}`);
+    const checkSound = new Audio("assets/audio/check.mp3");
+    if (checkbox.checked) {
+        content.classList.add("text-violet-400", "line-through", "scale-125");
+        setTimeout(() => {
+            content.classList.remove("scale-125");
+        }, 300);
+        checkSound.play();
+    } else {
+        content.classList.remove("text-violet-400", "line-through");
+    }
 }
 
 function formatDate(date) {
@@ -236,7 +246,13 @@ function createTaskElement(id, task) {
     element.appendChild(content);
 
     content.innerText = task;
-    content.classList.add("mt-4");
+    content.classList.add(
+        "mt-4",
+        "transition",
+        "ease-in-out",
+        "duration-500",
+        "decoration-2"
+    );
     content.addEventListener("click", () =>
         editTaskElement(content, element, updateButton, id)
     );
