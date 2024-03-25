@@ -10,6 +10,7 @@
             href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap"
             rel="stylesheet"
         />
+        <link href="style.css" rel="stylesheet" />
         <script src="https://cdn.tailwindcss.com"></script>
     </head>
     <body
@@ -21,7 +22,7 @@
         ></div>
         <main
             id="main"
-            class="mx-auto py-6 flex flex-col gap-8 bg-white/30 shadow-xl backdrop-blur-md min-h-[90vh] h-auto mb-6 mt-[5vh] w-[70vw] lg:w-[40vw] rounded-xl"
+            class="mx-auto py-6 px-8 flex flex-col gap-8 bg-white/30 shadow-xl backdrop-blur-md md:h-full h-[90vh] mb-6 mt-[5vh] w-[70vw] lg:w-[40vw] rounded-xl"
         >
             <header class="rounded-xl flex justify-center">
                 <h2 class="mx-auto text-4xl drop-shadow-md font-thin">
@@ -37,26 +38,41 @@
                     <input
                         type="text"
                         id="task-input"
-                        class="caret-violet-300"
-                        placeholder="New Task"
+                        class="caret-violet-400 rounded-md focus:outline-teal-950 focus:ring-0 bg-zinc-800 text-zinc-200 h-[4vh] md:h-[3.5vh] lg:h-[6.5vh]"
+                        placeholder="   New Task"
                     />
-                    <button id="create-task-button" onclick="createTask()">
+                    <button
+                        id="create-task-button"
+                        onclick="createTask()"
+                        class="drop-shadow-md mx-auto"
+                    >
                         Create!
                     </button>
                     <div id="task-date" class="flex mx-auto gap-4 mt-2">
-                        <button onclick="changeDay(-1)">&larr;</button>
+                        <button onclick="changeDay(-1)">
+                            <img
+                                src="assets/icons/left.svg"
+                                class="w-[6vh] h-[6vh] md:w-[3vh] md:h-[3vh]"
+                            />
+                        </button>
                         <input
                             type="date"
                             id="date-picker"
                             value="2011-09-29"
                             onchange="changeDateHandler()"
+                            class="rounded-lg bg-zinc-800 text-zinc-200 mx-auto h-[4vh] md:h-[3.5vh] lg:h-[6.5vh] my-auto"
                         />
-                        <button onclick="changeDay(+1)">&rarr;</button>
+                        <button onclick="changeDay(+1)">
+                            <img
+                                src="assets/icons/right.svg"
+                                class="w-[6vh] h-[6vh] md:w-[3vh] md:h-[3vh]"
+                            />
+                        </button>
                     </div>
                 </div>
                 <div
                     id="task-list-items"
-                    class="flex flex-col min-w-full"
+                    class="flex flex-col min-w-full overflow-auto mr-auto mt-4 h-[46vh] rounded-xl bg-gradient-to-r from-violet-300 to-pink-200"
                 ></div>
             </div>
         </main>

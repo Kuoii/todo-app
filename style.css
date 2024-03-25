@@ -1,0 +1,29 @@
+::selection {
+    color: rgb(39 39 42);
+    background: rgb(167 139 250);
+}
+/* #task-list-items {
+    background-color: aquamarine;
+    overflow: auto;
+    height: 50vh;
+} */
+/* ::-webkit-scrollbar {
+    width: 10px;
+}
+/* Track 
+::-webkit-scrollbar-track {
+    background: rgb(167 139 250);
+}
+/* Handle 
+::-webkit-scrollbar-thumb {
+    background: #888;
+    width: 8px;
+}
+/* Handle on hover 
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+* {
+    scrollbar-color: red orange;
+    scrollbar-width: thin;
+} */

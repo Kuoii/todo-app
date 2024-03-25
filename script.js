@@ -15,7 +15,7 @@ async function catchedFetch(url, options) {
 async function fetchTasks() {
     const date = document.getElementById("date-picker").value;
 
-    const result = await catchedFetch(`http://localhost:3000/?date=${date}`, {
+    const result = await catchedFetch(`/api/?date=${date}`, {
         method: "GET",
     });
 
@@ -41,7 +41,7 @@ async function createTask() {
     };
     console.log(document.getElementById("date-picker").value);
 
-    const result = await catchedFetch("http://localhost:3000/", {
+    const result = await catchedFetch("/api/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
@@ -70,7 +70,7 @@ async function updateTask(taskId, element) {
         id: taskId,
     };
 
-    const result = await catchedFetch("http://localhost:3000/", {
+    const result = await catchedFetch("/api/", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
@@ -92,6 +92,11 @@ async function updateTask(taskId, element) {
         console.log("Updated task: ", taskId);
 
         raiseToast("Task successfully updated!", "success");
+
+        content.classList.add("scale-125", "text-violet-400");
+        setTimeout(() => {
+            content.classList.remove("scale-125", "text-violet-400");
+        }, 300);
     } else {
         raiseToast(`Updating task failed because: ${response}`, "error");
     }
@@ -100,9 +105,12 @@ async function updateTask(taskId, element) {
 async function deleteTask(taskId) {
     console.log("deleting?");
 
+    const deleteTaskSound = new Audio("assets/audio/trash.mp3");
+    deleteTaskSound.play();
+
     const requestBody = { id: taskId };
 
-    const result = await catchedFetch("http://localhost:3000/", {
+    const result = await catchedFetch("/api/", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
@@ -139,6 +147,13 @@ function editTaskElement(content, element, button, taskId) {
             document.getElementsByClassName("update-button").click();
         }
     });
+    editTask.classList.add(
+        "bg-zinc-800",
+        "text-zinc-200",
+        "rounded-lg",
+        "h-8",
+        "my-auto"
+    );
     content.innerHTML = "";
     editTask.value = task;
     element.insertBefore(editTask, element.firstChild.nextSibling);

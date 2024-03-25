@@ -1,6 +1,7 @@
 import express from "express";
-const app = express();
 import cors from "cors";
+import fs from "fs";
+const app = express();
 const port = 3000;
 
 import { Request, Response } from "express";
@@ -22,7 +23,13 @@ function log(req: Request, res: Response, next) {
 }
 
 app.get("/", (req, res) => {
-    const rawDate = new Date(req.query.date as any);
+    res.send(fs.readFileSync("../index.html").toString());
+});
+
+app.get("/api", (req, res) => {
+    const rawDate = req.query.date
+        ? new Date(req.query.date as any)
+        : new Date();
     const date = rawDate.toISOString().split("T")[0];
     console.log(date);
     try {
@@ -49,7 +56,7 @@ const TaskSchema = z
     })
     .required();
 
-app.post("/", (req, res) => {
+app.post("/api", (req, res) => {
     try {
         const task = TaskSchema.parse(req.body);
 
@@ -67,7 +74,7 @@ app.post("/", (req, res) => {
     }
 });
 
-app.put("/", (req, res) => {
+app.put("/api", (req, res) => {
     try {
         const updateQuery = db.prepare(
             "UPDATE tasks SET task = (@task) WHERE id = (@id) RETURNING id, task"
@@ -82,7 +89,7 @@ app.put("/", (req, res) => {
     }
 });
 
-app.delete("/", (req, res) => {
+app.delete("/api", (req, res) => {
     try {
         const taskId = req.body.id;
         console.log(taskId);
